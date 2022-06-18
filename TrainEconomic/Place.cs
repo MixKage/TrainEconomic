@@ -6,13 +6,12 @@ using System.Threading.Tasks;
 
 namespace TrainEconomic
 {
-    internal class valuta
+    internal class Place
     {
-        public string name;
-        public int value = 1;        
-        public valuta(string name)
+        public List<int> valutesCount = new List<int>();
+        public Place(List<int> valutesCount)
         {
-            this.name = name;            
+            this.valutesCount = valutesCount;
         }
     }
 }
