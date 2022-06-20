@@ -88,11 +88,11 @@ public static class Program
                     string desryption = String.Empty;
                     if (valutes[indexValute - 1].value * newCount > tmpMyMoney)
                     {
-                        desryption = $"Вам не хватает {valutes[indexValute - 1].value * newCount - tmpMyMoney} ед. Взять кредит?";
+                        desryption = $"Вам не хватает {valutes[indexValute - 1].value * newCount - tmpMyMoney} ед. Взять кредит? (0-назад, 1-да, 2-отменить)\n::";
                     }
                     else if (valutes[indexValute - 1].value * newCount < tmpMyMoney)
                     {
-                        desryption = $"У вас переизбыток {tmpMyMoney - valutes[indexValute - 1].value * newCount} ед. Погасить кредит?";
+                        desryption = $"У вас переизбыток {tmpMyMoney - valutes[indexValute - 1].value * newCount} ед. Погасить кредит? (0-назад, 1-да, 2-отменить)\n::";
                     }
 
                     if (desryption == String.Empty)
@@ -102,15 +102,16 @@ public static class Program
                     }
 
                     int ans = -1;
-                    while (ans != 0 && ans != 1)
-                        ans = SuperConsole.ReadLine(desryption, "Введите 0-назад, 1-да:");
+                    while (ans != 0 && ans != 1 && ans != 2)
+                        ans = SuperConsole.ReadLine(desryption, "Введите 0-назад, 1-да, 2-отменить:");
                     if (ans == 0)
                     {
                         person.ReturnValue();
-                        place.ReturnValue();
-                        continue;
+                        tmpMyMoney = 0;
+                        indexValuteWallet = -1;
+                        break;
                     }
-                    else
+                    else if (ans == 1)
                     {
                         if (valutes[indexValute - 1].value * newCount > tmpMyMoney)
                         {
@@ -122,10 +123,18 @@ public static class Program
                         }
                         break;
                     }
+                    else
+                    {
+                        person.ReturnValue();
+                        place.ReturnValue();
+                        tmpMyMoney = 0;
+                        indexValuteWallet = -1;
+                    }
                 }
+                if (indexValuteWallet == -1) break;
                 tmpMyMoney += valutes[indexValuteWallet - 1].value * newCountWallet;
             }
-
+            if(indexValuteWallet==-1) { continue; }
             if (tmpMyMoney == 0) { return; }
 
             person.SaveValutes();

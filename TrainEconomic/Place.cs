@@ -10,10 +10,13 @@ namespace TrainEconomic
     {
         private List<int> valutesCount = new List<int>();
         private List<int> tmpValutesCount = new List<int>();
-        public Place(List<int> valutesCount)
+        public Place(List<int> input)
         {
-            this.valutesCount = valutesCount;
-            tmpValutesCount = valutesCount;
+            foreach (int valute in input)
+            {
+                this.valutesCount.Add(valute);
+                this.tmpValutesCount.Add(valute);
+            }
         }        
 
         public int GetValuteCount(int index)
@@ -34,11 +37,15 @@ namespace TrainEconomic
         }
         public void ReturnValue()
         {
-            tmpValutesCount = valutesCount;
+            tmpValutesCount.Clear();
+            foreach (int valute in valutesCount)
+                tmpValutesCount.Add(valute);
         }
         public void SaveValutes()
         {
-            valutesCount = tmpValutesCount;
+            valutesCount.Clear();
+            foreach (int valute in tmpValutesCount)
+                valutesCount.Add(valute);
         }
     }
 }
