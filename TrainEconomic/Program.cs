@@ -16,7 +16,7 @@ public static class Program
     private static Person person;
     private static Place place;
 
-    static Program()
+    private static void Main()
     {
         StartGame();
 
@@ -33,22 +33,17 @@ public static class Program
         }
     }
 
-    private static void Main()
-    {
-
-    }
-
     private static void ConsoleUpdate()
     {
         Console.Clear();
-        Console.WriteLine($"Шаг: {stepsCount}"); 
+        Console.WriteLine($"Шаг: {stepsCount}");
         Console.WriteLine("Ваш баланс: ");
         // При отрицательных числах скрывать пробел
 
         for (int i = 0; i < valutes.Count; i++)
         {
             string space = valutes[i].value < 0 ? "" : " "; ;
-            Console.WriteLine($"Название: {valutes[i].name} | Цена:{space}{valutes[i].value} | Кол-во: {person.valutesCount[i]}");
+            Console.WriteLine($"Название: {valutes[i].name} | Цена:{space}{valutes[i].value} | Кол-во: {person.GetValuteTmpCount(i)}");
         }
         Console.WriteLine($"Кредиты: {creadit}");
 
@@ -56,7 +51,7 @@ public static class Program
         for (int i = 0; i < valutes.Count; i++)
         {
             string space = valutes[i].value < 0 ? "" : " ";
-            Console.WriteLine($"Название: {valutes[i].name} | Цена:{space}{valutes[i].value} | Кол-во: {place.valutesCount[i]}");
+            Console.WriteLine($"Название: {valutes[i].name} | Цена:{space}{valutes[i].value} | Кол-во: {place.GetValuteTmpCount(i)}");
         }
 
         Console.WriteLine($"\nПотребности: {requirement} | Осталось дней до закрытия: {stepsCount % 3}");
@@ -68,28 +63,75 @@ public static class Program
     {
         while (true)
         {
-            int tmpCredit = 0;
+
             Console.Write("Покупка: ");
             string store = SelectValute(false);
             int indexValute = int.Parse(store.Split('|')[0]);
             int newCount = int.Parse(store.Split('|')[1]);
             if (indexValute == 0) { return; }
-            ConsoleUpdate();
-            Console.WriteLine($"Вам необходимо {valutes[indexValute - 1].value * newCount} ед. \nВыберите собственную валюту на продажу (1-3):");
-            string wallet = SelectValute(true);
-            int indexValuteWallet = int.Parse(store.Split('|')[0]);
-            int newCountWallet = int.Parse(store.Split('|')[1]);
-            if (indexValuteWallet == 0) { return; }
-            
-            if(valutes[indexValute - 1].value * newCount > valutes[indexValuteWallet - 1].value * newCountWallet)
+
+            int indexValuteWallet = -1;
+            int newCountWallet = 0;
+            int tmpMyMoney = 0;
+
+            while (indexValuteWallet != 0)
             {
-                Console.Write($"Вам не хватает {valutes[indexValute - 1].value * newCount - valutes[indexValuteWallet - 1].value * newCountWallet} ед. Взять кредит? (0-назад, 1-да, 2-нет)\n:: ");
+                ConsoleUpdate();
+                Console.WriteLine($"Количетсво полученных единиц: {tmpMyMoney}");
+                Console.Write($"Вам необходимо {valutes[indexValute - 1].value * newCount} ед. \nВыберите собственную валюту на продажу (1-3) (0-завершить продажу):\n::");
+                string wallet = SelectValute(true);
+                indexValuteWallet = int.Parse(wallet.Split('|')[0]);
+                newCountWallet = int.Parse(wallet.Split('|')[1]);
+
+                if (indexValuteWallet == 0)
+                {
+                    string desryption = String.Empty;
+                    if (valutes[indexValute - 1].value * newCount > tmpMyMoney)
+                    {
+                        desryption = $"Вам не хватает {valutes[indexValute - 1].value * newCount - tmpMyMoney} ед. Взять кредит?";
+                    }
+                    else if (valutes[indexValute - 1].value * newCount < tmpMyMoney)
+                    {
+                        desryption = $"У вас переизбыток {tmpMyMoney - valutes[indexValute - 1].value * newCount} ед. Погасить кредит?";
+                    }
+
+                    if (desryption == String.Empty)
+                    {
+                        person.SetValutesCount(indexValute - 1, person.GetValuteTmpCount(indexValute - 1) + newCount);
+                        break;
+                    }
+
+                    int ans = -1;
+                    while (ans != 0 && ans != 1)
+                        ans = SuperConsole.ReadLine(desryption, "Введите 0-назад, 1-да:");
+                    if (ans == 0)
+                    {
+                        person.ReturnValue();
+                        place.ReturnValue();
+                        continue;
+                    }
+                    else
+                    {
+                        if (valutes[indexValute - 1].value * newCount > tmpMyMoney)
+                        {
+                            creadit -= valutes[indexValute - 1].value * newCount - tmpMyMoney;
+                        }
+                        else if (valutes[indexValute - 1].value * newCount < tmpMyMoney)
+                        {
+                            creadit += tmpMyMoney - valutes[indexValute - 1].value * newCount;
+                        }
+                        break;
+                    }
+                }
+                tmpMyMoney += valutes[indexValuteWallet - 1].value * newCountWallet;
             }
-            else if (valutes[indexValute - 1].value * newCount < valutes[indexValuteWallet - 1].value * newCountWallet)
-            {
-                Console.Write($"Вам не хватает {valutes[indexValuteWallet - 1].value * newCountWallet - valutes[indexValute - 1].value * newCount} ед. Погасить кредит? (0-назад, 1-да, 2-нет)\n:: ");
-            }
-            if()
+
+            if (tmpMyMoney == 0) { return; }
+
+            person.SaveValutes();
+            place.SaveValutes();
+            break;
+            //if()
             //Если остались свободные единицы потратить их на погашение долга или покупку валюты
             //Console.WriteLine($"Вам необходимо {valutes[indexValute - 1].value * newCount} ед. \nВыберите собственную валюту на продажу (1-3):");
             //Console.ReadLine();
@@ -109,26 +151,27 @@ public static class Program
             {
                 int countCoint;
                 if (mode)
-                    countCoint = person.valutesCount[int.Parse(ans) - 1];
+                    countCoint = person.GetValuteTmpCount(int.Parse(ans) - 1);
                 else
-                    countCoint = place.valutesCount[int.Parse(ans) - 1];
+                    countCoint = place.GetValuteTmpCount(int.Parse(ans) - 1);
 
                 Console.Write($"{valutes[int.Parse(ans) - 1].name} ({countCoint}): ");
 
-                while (!int.TryParse(Console.ReadLine(), out newCount))
-                {
-                    Console.WriteLine("Введите количество!");
-                }
+                newCount = SuperConsole.ReadLine("", "Введите число!");
                 if (newCount == 0) { ans = "4"; continue; }
                 while (newCount > countCoint)
                 {
                     Console.WriteLine("Введено больше, чем имеется на бирже!");
                     Console.Write($"{valutes[int.Parse(ans) - 1].name} ({countCoint}): ");
-                    while (!int.TryParse(Console.ReadLine(), out newCount))
-                    {
-                        Console.WriteLine("Введите количество!");
-                        Console.Write($"{valutes[int.Parse(ans) - 1].name} ({countCoint}): ");
-                    }
+                    newCount = SuperConsole.ReadLine("", "Введите число");
+                }
+                if (mode)
+                {
+                    person.SetValutesCount(int.Parse(ans) - 1, person.GetValuteTmpCount(int.Parse(ans) - 1) - newCount);
+                }
+                else
+                {
+                    place.SetValutesCount(int.Parse(ans) - 1, place.GetValuteTmpCount(int.Parse(ans) - 1) - newCount);
                 }
                 return ans + "|" + newCount.ToString();
             }
