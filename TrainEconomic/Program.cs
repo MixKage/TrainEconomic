@@ -54,7 +54,7 @@ public static class Program
             Console.WriteLine($"Название: {valutes[i].name} | Цена:{space}{valutes[i].value} | Кол-во: {place.GetValuteTmpCount(i)}");
         }
 
-        Console.WriteLine($"\nПотребности: {requirement} | Осталось дней до закрытия: {stepsCount % 3}");
+        Console.WriteLine($"\nПотребности: {requirement} | Осталось дней до закрытия: {3 - stepsCount % 3}");
 
         Console.WriteLine($"\n(0 - следующий шаг/отмена)");
     }
@@ -115,11 +115,11 @@ public static class Program
                     {
                         if (valutes[indexValute - 1].value * newCount > tmpMyMoney)
                         {
-                            creadit -= valutes[indexValute - 1].value * newCount - tmpMyMoney;
+                            creadit += valutes[indexValute - 1].value * newCount - tmpMyMoney;
                         }
                         else if (valutes[indexValute - 1].value * newCount < tmpMyMoney)
                         {
-                            creadit += tmpMyMoney - valutes[indexValute - 1].value * newCount;
+                            creadit -= tmpMyMoney - valutes[indexValute - 1].value * newCount;
                         }
                         break;
                     }
@@ -134,17 +134,12 @@ public static class Program
                 if (indexValuteWallet == -1) break;
                 tmpMyMoney += valutes[indexValuteWallet - 1].value * newCountWallet;
             }
-            if(indexValuteWallet==-1) { continue; }
+            if (indexValuteWallet == -1) { continue; }
             if (tmpMyMoney == 0) { return; }
 
             person.SaveValutes();
             place.SaveValutes();
             break;
-            //if()
-            //Если остались свободные единицы потратить их на погашение долга или покупку валюты
-            //Console.WriteLine($"Вам необходимо {valutes[indexValute - 1].value * newCount} ед. \nВыберите собственную валюту на продажу (1-3):");
-            //Console.ReadLine();
-
         }
     }
 
@@ -196,16 +191,22 @@ public static class Program
     {
         Random random = new Random();
 
-        foreach (var val in valutes) { val.value = random.Next(-5, 5); }
+        foreach (var val in valutes)
+        {
+            val.value += random.Next(-5, 5);
+            if (val.value > 15) val.value = 15;
+            else if (val.value < -5) val.value = -5;
+        }
         stepsCount++;
 
-        if (requirement != 0)
-        {
-            creadit += requirement;
-        }
+        //if (requirement != 0)
+        //{
+        //    creadit += requirement;
+        //}
 
         if (stepsCount % 3 == 0)
         {
+            creadit += requirement;
             //Подумать над сложностью игры
             requirement = random.Next(5, 10);
         }
