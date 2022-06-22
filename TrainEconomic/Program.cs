@@ -42,20 +42,42 @@ public static class Program
         Console.Clear();
         Console.WriteLine($"Шаг: {stepsCount}");
         Console.WriteLine("Ваш баланс: ");
+
+        int maxLenght = 0;
+        string spaceName = "";
+        for (int i = 0; i < 3; i++)
+        {
+            if (valutes[i].name.Length > maxLenght)
+            {
+                maxLenght = valutes[i].name.Length;
+            }
+        }
         // При отрицательных числах скрывать пробел
 
         for (int i = 0; i < valutes.Count; i++)
         {
-            string space = valutes[i].value < 0 ? "" : " "; ;
-            Console.WriteLine($"Название: {valutes[i].name} | Цена:{space}{valutes[i].value} | Кол-во: {person.GetValuteTmpCount(i)}");
+            spaceName = "";
+            string space = valutes[i].value < 0 ? "" : " ";
+            int countSpace = maxLenght - valutes[i].name.Length;
+            for (int l = 0; l < countSpace; l++)
+            {
+                spaceName += " ";
+            }
+            Console.WriteLine($"Название: {valutes[i].name} {spaceName}| Цена:{space}{valutes[i].value} | Кол-во: {person.GetValuteTmpCount(i)}");
         }
         Console.WriteLine($"Кредиты: {creadit}");
 
         Console.WriteLine("\nБиржа: ");
         for (int i = 0; i < valutes.Count; i++)
         {
+            spaceName = "";
             string space = valutes[i].value < 0 ? "" : " ";
-            Console.WriteLine($"Название: {valutes[i].name} | Цена:{space}{valutes[i].value} | Кол-во: {place.GetValuteTmpCount(i)}");
+            int countSpace = maxLenght - valutes[i].name.Length;
+            for (int l = 0; l < countSpace; l++)
+            {
+                spaceName += " ";
+            }
+            Console.WriteLine($"Название: {valutes[i].name} {spaceName}| Цена:{space}{valutes[i].value} | Кол-во: {place.GetValuteTmpCount(i)}");
         }
 
         Console.WriteLine($"\nПотребности: {requirement} | Осталось дней до закрытия: {3 - stepsCount % 3}");
@@ -261,11 +283,24 @@ public static class Program
 
     private static void StartGame()
     {
-        valutes.Add(new valuta("Coin 1"));
-        valutes.Add(new valuta("Coin 2"));
-        valutes.Add(new valuta("Coin 3"));
+        Console.WriteLine("Цель игры продержаться как можно дольше ходов балансируя на бирже.\nМаксимально валюты может стоить 15 ед., минимально -5.\nКаждые 3 хода появляются потребности, которые нужно закрывать.\nЕсли закрыть потребность не удаётся, берётся кредит.\nКогда вы набираете 30 кредитов, вы проигрываете, удачи!");
+        for (int i = 0; i < 3; i++)
+        {
+            Console.Write($"Введите название {i + 1} монеты: ");
+            valutes.Add(new valuta(Console.ReadLine()));
+        }
+        Console.Write("Выберите стартовую валюту (1-3): ");
+        int startValute = SuperConsole.ReadLine("", "Введите 1-3!");
+        while (startValute > 3 || startValute < 1)
+        {
+            Console.Write("Выберите стартовую валюту (1-3): ");
+            startValute = SuperConsole.ReadLine("", "Введите 1-3!");
+        }
 
-        person = new Person(new List<int>() { 5, 5, 5 });
+        person = new Person(new List<int>() { 0, 0, 0 });
         place = new Place(new List<int>() { 5, 5, 5 });
+
+        person.SetValutesCount(startValute - 1, 5);
+        person.SaveValutes();
     }
 }
