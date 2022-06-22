@@ -23,7 +23,11 @@ public static class Program
         while (true)
         {
 
-            Step();
+            if (!Step())
+            {
+                Console.WriteLine("!ВЫ ПРОИГРАЛИ!");
+                return;
+            }
             ConsoleUpdate();
             InputEngiene();
             if (creadit >= 30)
@@ -78,7 +82,13 @@ public static class Program
             {
                 ConsoleUpdate();
                 Console.WriteLine($"Количетсво полученных единиц: {tmpMyMoney}");
-                Console.Write($"Вам необходимо {valutes[indexValute - 1].value * newCount} ед. \nВыберите собственную валюту на продажу (1-3) (0-завершить продажу):\n::");
+
+                int needMoney = valutes[indexValute - 1].value * newCount;
+                if (needMoney <= 0)
+                {
+                    needMoney = newCount / 2;
+                }
+                Console.Write($"Вам необходимо {needMoney} ед. \nВыберите собственную валюту на продажу (1-3) (0-завершить продажу):\n::");
                 string wallet = SelectValute(true);
                 indexValuteWallet = int.Parse(wallet.Split('|')[0]);
                 newCountWallet = int.Parse(wallet.Split('|')[1]);
@@ -88,11 +98,11 @@ public static class Program
                     string desryption = String.Empty;
                     if (valutes[indexValute - 1].value * newCount > tmpMyMoney)
                     {
-                        desryption = $"Вам не хватает {valutes[indexValute - 1].value * newCount - tmpMyMoney} ед. Взять кредит? (0-назад, 1-да, 2-отменить)\n::";
+                        desryption = $"Вам не хватает {needMoney - tmpMyMoney} ед. Взять кредит? (0-назад, 1-да, 2-отменить)\n::";
                     }
-                    else if (valutes[indexValute - 1].value * newCount < tmpMyMoney)
+                    else if (needMoney < tmpMyMoney)
                     {
-                        desryption = $"У вас переизбыток {tmpMyMoney - valutes[indexValute - 1].value * newCount} ед. Погасить кредит? (0-назад, 1-да, 2-отменить)\n::";
+                        desryption = $"У вас переизбыток {tmpMyMoney - needMoney} ед. Погасить кредит? (0-назад, 1-да, 2-отменить)\n::";
                     }
 
                     if (desryption == String.Empty)
@@ -109,7 +119,7 @@ public static class Program
                         person.ReturnValue();
                         tmpMyMoney = 0;
                         indexValuteWallet = -1;
-                        break;
+                        ConsoleUpdate();
                     }
                     else if (ans == 1)
                     {
@@ -129,10 +139,20 @@ public static class Program
                         place.ReturnValue();
                         tmpMyMoney = 0;
                         indexValuteWallet = -1;
+                        ConsoleUpdate();
+                        break;
                     }
                 }
-                if (indexValuteWallet == -1) break;
-                tmpMyMoney += valutes[indexValuteWallet - 1].value * newCountWallet;
+                if (indexValuteWallet == -1) continue;
+
+                if (valutes[indexValuteWallet - 1].value <= 0)
+                {
+                    tmpMyMoney += newCountWallet / 2;
+                }
+                else
+                {
+                    tmpMyMoney += valutes[indexValuteWallet - 1].value * newCountWallet;
+                }
             }
             if (indexValuteWallet == -1) { continue; }
             if (tmpMyMoney == 0) { return; }
@@ -157,13 +177,25 @@ public static class Program
                 if (mode)
                     countCoint = person.GetValuteTmpCount(int.Parse(ans) - 1);
                 else
+                {
                     countCoint = place.GetValuteTmpCount(int.Parse(ans) - 1);
+                    Console.WriteLine("Валюты с отрицательной стоимостью можно покупать только чётное количество!");
+                }
 
                 Console.Write($"{valutes[int.Parse(ans) - 1].name} ({countCoint}): ");
 
                 newCount = SuperConsole.ReadLine("", "Введите число!");
+
+                while (valutes[int.Parse(ans) - 1].value <= 0 && newCount % 2 != 0 && newCount != 0)
+                {
+                    Console.WriteLine("Валюты с отрицательной стоимостью можно покупать только чётное количество!");
+                    Console.Write($"{valutes[int.Parse(ans) - 1].name} ({countCoint}): ");
+                    newCount = SuperConsole.ReadLine("", "Введите число!");
+                }
+
                 if (newCount == 0) { ans = "4"; continue; }
-                while (newCount > countCoint)
+
+                while (newCount > countCoint || newCount < 0)
                 {
                     Console.WriteLine("Введено больше, чем имеется на бирже!");
                     Console.Write($"{valutes[int.Parse(ans) - 1].name} ({countCoint}): ");
@@ -187,7 +219,7 @@ public static class Program
         }
         return ans + "|" + newCount.ToString();
     }
-    private static void Step()
+    private static bool Step()
     {
         Random random = new Random();
 
@@ -210,6 +242,21 @@ public static class Program
             //Подумать над сложностью игры
             requirement = random.Next(5, 10);
         }
+        if (stepsCount % 2 == 0)
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                if (place.GetValuteTmpCount(i) < 10)
+                {
+                    place.SetValutesCount(i, place.GetValuteTmpCount(i) + 1);
+                }
+            }
+        }
+        if (creadit >= 30)
+        {
+            return false;
+        }
+        return true;
     }
 
     private static void StartGame()
